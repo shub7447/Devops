@@ -1,0 +1,211 @@
+
+                                                 PARCEL V/S PACKAGE
+Cloudera recommends the use of parcels for installation over packages, because parcels enable Cloudera Manager to easily manage the software on your cluster
+, automating the deployment and upgrade of service binaries. Electing not to use parcels will require you to manually upgrade packages on all hosts in your 
+cluster when software updates are available, and will prevent you from using Cloudera Manager's rolling upgrade capabilities.
+
+                                         HIVE
+										 
+										 
+	Database                                             Data Warehouse                                                              Datastore
+	*Supports ACID                                  *OLAP is nothing but Datawarehousing                                  Datastore is something which handle
+	*transaction complete/fail i.e Automicity       *You process the data which is came from transactional processing     all kind of data
+	*data in/out i.e Consistency                     to gain some insights to make use of the insights 
+	*Isolated                                       *Getting insights from the data is OLAP.
+	*Durability
+	*It gurantees the transaction
+	*It supports OLTP transactions
+	*Excessive OLAP was impacting OLTP and 
+	 also the cost associated with the RDBMS
+	 was too high. that is why they started 
+	 creating hadoop.
+	*Databse is capable of doing both OLTP 
+	 and OLAP but there performance is going down
+	 so they decided to create a platform where 
+	 they will do OLAP and they wanted to do it 
+	 in cheap.
+	 *In database when the tables are created you 
+	  cannot change the columns and all later on 
+	   there will come huge discrepancy.
+	 
+	 
+	 
+	 
+	 Hive is only for structured data you cannot store unstructure or semi-structure data over there.
+	 You can use spark to convert semi=structure data to structure data.
+	 Hive has a fixed schema if you have variable schema your data will be unstructure. that is why HBASE came into being it has flexible schema.
+	 The data which does not have fixed schema is called as unstructured data.
+	 
+	 
+ HIVE
+	 It is the opensource datawarehouse solution for hadoop.
+	 which supports hive query language it has its own language which is almost similar to SQL.
+     You can run your query over the big data which is residing in hdfs using the platform YARN.
+     It does Batch processing, Parallel Processing. Parallel processing is achieved with the help of yarn.
+     Whenever you submit your query it uses Thrift server. thrift server redirects your query  to Hiveserver2.
+
+    
+    1)You submit your query through Beeline/hivecli/hue/thriftsever/api
+	2)Then the query will hit to HS2 
+	3)HS2 consist of Hive query engine
+	  *hivequery engine- which is compiler which will query  hive and will check the syntax whether  it is right
+	  *If your query is right then it will check wheather the databases and tables you mentioned in your query is present or not.
+	  *So it will check it in Hive Metastore. so if your Meatadata is found then it  will allow you to go to another step. But if its not found then it will
+	   thow thw semantic Error.
+	  *Then it will tell the exeuction engine to make the DAG for exeuction.
+	  
+ Partitioning
+    It divides the data or splits the data across the columns.
+	In partitioning it makes the directories.
+	there two types:
+	static: when you have to insert data manually
+	Dynamic: when you have one global  database and you have to import data from that global database and you don't know which data belongs to which country
+	          there is only one single file then Dynamic partitioning comes into play.
+			  
+ Bucketing
+     In bucketing we organize the data it is an organising technique. similar to partitioning but it divides the data into more manageble chunks. 
+	 In bucketing it makes Files. so you can do bucketing after partitioning too or without partitioning too.
+	 It uses hashing technique to organize the data.
+	 It is done using Clusterby clause.
+	 
+ Compression
+     
+
+
+
+
+
+sudo su hdfs --not happening due to /bin/bash
+then
+ sudo chsh -s /bin/bash hdfs --It will change the shell. we are changing /nologin of shell to /bin/bash. we are giving /bin/bash access to HDFS.
+ you can check it through cat /etc/passwd | grep hdfs
+
+TO check no of open connections on hive
+
+lsof -i:10000 | grep 'ESTABLISHED'
+
+we can limit no of users connections
+
+ON JOB TUNNING-
+
+so whatever properties we will set in this particular session will only be applicable to this session only.
+suppose: mapreduce.map.memory.mb = 2104
+
+mapred.map.javaopts- suppose you get an issue that your container is killed because of tasks then you have to increase the OPTS memory.
+And if your container is being killed due to overhead memory them that is the jvm issue.
+
+LOGS-
+
+You i'll get service logs in /var/log/hive/*HIVESERVER2* 
+These service logs will only be present on the node where the service is present.
+And the logs will be present for some time depending upon the retention period configured.
+default directory: /var/run/cloudera-scm-agent/process- it contains different files but the no of log files states that the no of times hiveserver2 is restarted(Process logs).
+Select * from customer; - It will not trigger the job because there is no computation involved. there is only read of data and not processing.
+
+   
+    HIVE TROUBLESHOOTING
+1] Create view is taking time
+  Approach: Ask questions
+1] Is it a new issue means is this the first time you are firing these query
+2] Any recent changes [config changes/ upgrade]
+3] So after upgradation CDH to CDP there were issue in query slowness. so we suggested them to set: set hive.cbo.enable=false;   ##### explain extended select * from tablename;
+4] so firstly whatever changes you want to perform regarding query you will not directly perform on cluster level. you'll perform first it on session level i.e on hue 
+   session. so now set the same parameter on session level i.e set hive.cbo.enable=false; and rerun the same query that was running slow on the same session.
+5] There was other issue that the Mapper and reducer were not progressing. he was performiing buket map join. so we asked him to share the explain plan with CBO and Without
+   CBO. so we noticed that when he run the query with CBO then the issue was coming. so be suggested him to disable the CBO on session level and then the problem was not 
+   coming. so this issue comes for some queries and we cannot suggest to change it at cluster level because there are thousands of jobs running in the cluster that are 
+   running fine. so we suggest them to change it on session level according to requirement.   ##### to check table details we use: desc tablename;
+6] There was other issue like they have created multiple tables in databases recently or before month. so they were able to see partial metadata. they were trying to fetch
+   the table table using table id from backend database. problem was metadata was partially updated means whenever we create  table table id gets generated and it is updated
+   in the backed databases on the information schema database. which consisit  of TABLES table. TABLES table conatin no of tables created and the table id. there is also
+   other  table called Columns which should also get updated with table id when the table is created. But in this case the columns table was not updated with table id.
+   and they we not able to fetch the table deatils. so they were asking for what query to fire to get the details. so we suggested them to create new table with
+   create table as select *from oldtable name. so what will happen they get the new table with the same old data.
+syntax: create table as select * from oldtablename;
+7] There was other issue of vertex error stating caused by input path does not exist /tablename/city=pune.so he had fired a query and this was the output he received.
+   so what we will do is we will check this location on hdfs wheather it is present and it was not found. In this case the user had dropped that data and the metadata 
+   was not updated. If it's dropped then it should not search for that location but still it was searching  And the Msck repair command was also not working 
+   in that case so we manually gone to that location and deleted that path using hdfs dfs -rm /tablename/city=pune 
+
+
+8] YARN job is Running Slow
+Hello Everyone
+
+i am running one YARN job on daily basis ,but today its running little bit slow than yesterday, on the same node other peoples also running the same job but they 
+didn't face any issue regarding the slowness job,
+
+only my job is running slow and its a daily running job
+
+what could be the possible reason behind this?
+
+If you are running a hive job and if you noticed it is slower than the earlier run then you may need to check few things in the below order. 
+
+1. Is there any change in the code,
+2. Is there any new data load added to the table which is getting processed,
+3. Beeline console output where you can see the Hive counters details,
+4. Hiveserver2 and Hivemetastore logs to see the compilation and execution time of the faster and slower run.
+5. QueryId of the job(to check in HS2 and application logs)
+6. Faster and slower run of application logs where identify the slowness.
+7. explain <query> for the faster and slower(to see the record change and stats info)
+
+And one more thing how can we track the job that are running by user's.
+
+How can we track the status from cli or gui
+
+And one more thing how can we track the job that are running by user's.
+1. Go to RM UI > Running/finished/killed > check the User column
+2. CM > YARN > Applications > Based upon the user you can search over here.
+
+If you are happy with the response mark it as Accepts as Solution
+
+
+
+
+
+
+What is Diagnostic bundle ?
+
+What is CBO ?
+
+For every  Query no of execution plans are generated i.e how a hive can execute the query in different ways. Cost based means where limited or efficient amount of resources
+will only get utilized that plan it will consider for execution.
+  
+
+
+ https://cwlkt.apache.org/confluence/display/Hive/Configuration+Properties
+
+ https://github.com/Pushkr/Apache-Spark-Hands-On/tree/master/Hive
+
+ https://github.com/Prokopp/the-free-htve-book
+
+ https://github.com/zaratslan/Apache_Hive/blob/master/hive_optimization1.sql 
+
+Extra
+
+
+HiveServer2 Impersonation allows users to execute queries and access HDFS files as the connected user.
+If you do not enable impersonation, HiveServer2 by default executes all Hive tasks as the user ID that starts the Hive
+server; for clusters that use Kerberos authentication, this is the ID that maps to the Kerberos principal used with
+HiveServer2. Setting permissions to 1777, as recommended above, allows this user access to the Hive warehouse
+directory.
+You can change this default behavior by setting hive.metastore.execute.setugi to true on both the server and
+client. This setting causes the metastore server to use the client's user and group permissions.
+
+GATEWAY
+Just having Node Manager and Resource Manager running on a node will only give you the configuration files for YARN, not Spark2. That being said, you only need to 
+deploy Spark gateway role to your edge node, where you allow end user to login and run command line tool such as beeline, hdfs command and spark-shell/spark-submit. 
+No one should be allowed to login your Node Manager/Datanode, as a security policy.
+A gateway role just has the config files such as /etc/hadoop/conf/*. It allows clients to run on that host (the hdfs, hadoop, yarn, spark CLIs) and submit commands to 
+the cluster. By default any host running a service will have the config files included so you don't need to add a gateway role to your Node Manager and Resource Manager 
+roles.
+he term gateway may be used in lots of contexts - it usually refers to a
+machine or service that acts as an entry point to other services. For
+example, your entire cluster might be behind a firewall which blocks all
+inbound traffic, except that it allows you to log in to one of the
+machines. From that machine, you can submit jobs or interact with any of
+the services in the cluster. That machine would be called a "gateway".
+Often in a Cloudera context, a gateway is just that: a machine that you're
+supposed to log into to carry out some tasks that aren't possible from
+outside the cluster. Cloudera Manager might manage the machine (meaning it
+deploys configuration to it and does basic health checks) but not run any
+CDH services on it.
