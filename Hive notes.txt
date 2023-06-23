@@ -29,7 +29,7 @@ cluster when software updates are available, and will prevent you from using Clo
 	   there will come huge discrepancy.
 	 
 	 
-      hiveeeeeeeeeeeeeeeeeeeee	 
+      hiveeeeeeeeeeeeeeeeeeeee 	 Hola we are here
 	 
 	 Hive is only for structured data you cannot store unstructure or semi-structure data over there.
 	 You can use spark to convert semi=structure data to structure data.
